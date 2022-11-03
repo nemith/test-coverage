@@ -27,10 +27,16 @@ jobs:
 
       - run: go tool cover -html=cover.out -o coverage/coverage.html
 
-      - working-directory: coverage
-        run: git commit --author "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -a -m "update coverage"
+      - name: commit coverage output
+        working-directory: coverage
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "update coverage"
 
       - uses: ad-m/github-push-action@v0.6.0
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           directory: coverage
           branch: coverage
