@@ -1,0 +1,36 @@
+name: Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout main branch
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - run: go test -coverprofile=cover.out . transport/...
+
+      - name: checkout covrage branch
+        uses: actions/checkout@v3
+        with:
+          ref: 'coverage'
+          path: coverage
+
+      - run: go tool cover -html=cover.out -o coverage/coverage.html
+
+      - working-directory: coverage
+        run: git commit --author "github-actions[bot] <github-actions[bot]@users.noreply.github.com>" -a -m "update coverage"
+
+      - uses: ad-m/github-push-action@v0.6.0
+        with:
+          directory: coverage
+          branch: coverage
