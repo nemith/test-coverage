@@ -27,16 +27,28 @@ jobs:
 
       - run: go tool cover -html=cover.out -o coverage/coverage.html
 
+      - name: generate badge
+        run: |
+          set -x
+          total=`go tool cover -func=cover.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+
+          if (( $(echo "$total <= 50" | bc -l) )) ; then
+            COLOR=red
+          elif (( $(echo "$total > 80" | bc -l) )); then
+            COLOR=green
+          else
+            COLOR=orange
+          fi
+          curl https://img.shields.io/badge/Coverage-$total%25-$COLOR > coverage/badge.svg
+
       - name: commit coverage output
         working-directory: coverage
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "update coverage"
+          git commit --allow-empty -m "update coverage"
 
-      - uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          directory: coverage
-          branch: coverage
+      - name: push coverage branch
+        working-directory: coverage
+        run: git push
